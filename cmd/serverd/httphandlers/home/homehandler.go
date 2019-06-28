@@ -1,11 +1,12 @@
 package home
 
 import (
-	"fmt"
+	"html/template"
 	"net/http"
 )
 
 // Index renders the home page
 func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, this is a home page")
+	t, _ := template.ParseFiles("web/templates/home/index.html")
+	t.Execute(w, nil)
 }
