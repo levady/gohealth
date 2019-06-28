@@ -1,16 +1,16 @@
 package sitehealthchecker
 
 import (
+	"errors"
+	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Site represents Site data
 type Site struct {
 	URL     string
-	Healthy *bool
+	Healthy interface{}
 }
 
 // SiteHealthChecker represents SiteHealthChecker service
@@ -31,7 +31,7 @@ func New(timeout time.Duration) SiteHealthChecker {
 func (shc *SiteHealthChecker) AddSite(s Site) error {
 	u, err := url.Parse(s.URL)
 	if err != nil {
-		return errors.Wrapf(err, "Site URL is not valid")
+		return errors.New("Site URL is not valid")
 	} else if u.Scheme == "" || u.Host == "" {
 		return errors.New("Site URL must be an absolute URL")
 	} else if u.Scheme != "http" && u.Scheme != "https" {
@@ -41,4 +41,24 @@ func (shc *SiteHealthChecker) AddSite(s Site) error {
 	shc.Sites = append(shc.Sites, &s)
 
 	return nil
+}
+
+var siteChecker = checkSiteWithTimeout
+
+// RunHealthChecks run health checks on all stored Sites
+func (shc *SiteHealthChecker) RunHealthChecks() {
+	for idx := range shc.Sites {
+		s := shc.Sites[idx]
+		resp, err := siteChecker(s.URL, shc.Timeout)
+		if err != nil || resp.StatusCode != 200 {
+			s.Healthy = false
+		} else {
+			s.Healthy = true
+		}
+	}
+}
+
+func checkSiteWithTimeout(url string, timeout time.Duration) (*http.Response, error) {
+	client := http.Client{Timeout: timeout}
+	return client.Get(url)
 }
