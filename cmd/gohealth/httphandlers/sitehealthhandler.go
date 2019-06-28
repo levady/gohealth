@@ -20,6 +20,11 @@ type SiteHealthHandler struct {
 
 // Homepage renders the home page
 func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
 	p := Payload{Data: handler.Checker.Sites}
 	renderHomepage(w, p)
 }
