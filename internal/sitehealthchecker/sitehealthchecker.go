@@ -34,7 +34,7 @@ func New(timeout time.Duration) SiteHealthChecker {
 // AddSite add a single site to the Sites slice
 func (shc *SiteHealthChecker) AddSite(s Site) error {
 	// Validate URL
-	u, err := url.Parse(s.URL)
+	u, err := url.ParseRequestURI(s.URL)
 	if err != nil {
 		return errors.New("Site URL is not valid")
 	} else if u.Scheme == "" || u.Host == "" {
