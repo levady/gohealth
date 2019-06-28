@@ -1,5 +1,7 @@
 <html>
-  <head></head>
+  <head>
+    <title>Welcome to GO Health</title>
+  </head>
   <body>
     <p>
       {{if .ErrorData }}
@@ -13,10 +15,26 @@
       </form>
     </p>
 
-    <ul>
+    <ul class="sites">
       {{range .Data}}
-        <li>{{.URL}}</li>
+        <li>{{.URL}} - {{.Healthy}}</li><br />
       {{end}}
     </ul>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   </body>
 </html>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    setInterval(function(){
+      $.getJSON( "/ajax/sites/check", function(sites) {
+        let sitesHtml = ""
+        for (const site of sites) {
+          sitesHtml += "<li>" + site.url + " - " + site.healthy + "</li><br />"
+        }
+        $(".sites").html(sitesHtml)
+      });
+    }, 15000);
+  });
+</script>
