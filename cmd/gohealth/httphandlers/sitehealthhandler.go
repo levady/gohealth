@@ -20,6 +20,9 @@ type SiteHealthHandler struct {
 	Checker *sitehealthchecker.SiteHealthChecker
 }
 
+var runHealthChecks = healthChecksMethod
+var homepageTplPath = "web/templates/homepage.html"
+
 // Homepage renders the home page
 func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -28,7 +31,7 @@ func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Reques
 	}
 
 	p := Payload{Data: handler.Checker.Sites}
-	renderHomepage(w, p)
+	renderHomepage(w, p, http.StatusOK)
 }
 
 // Save saves a site to the store
@@ -44,7 +47,7 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	if err := handler.Checker.AddSite(s); err != nil {
 		errData := struct{ Msg string }{err.Error()}
 		p := Payload{Data: handler.Checker.Sites, ErrorData: errData}
-		renderHomepage(w, p)
+		renderHomepage(w, p, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -58,7 +61,7 @@ func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	handler.Checker.ParallelHealthChecks()
+	runHealthChecks(handler.Checker)
 
 	json, err := json.Marshal(handler.Checker.Sites)
 	if err != nil {
@@ -70,7 +73,12 @@ func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Re
 	w.Write(json)
 }
 
-func renderHomepage(w http.ResponseWriter, p Payload) {
-	t, _ := template.ParseFiles("web/templates/homepage.html")
-	t.Execute(w, p)
+func renderHomepage(w http.ResponseWriter, p Payload, statusCode int) error {
+	t, _ := template.ParseFiles(homepageTplPath)
+	w.WriteHeader(statusCode)
+	return t.Execute(w, p)
+}
+
+func healthChecksMethod(c *sitehealthchecker.SiteHealthChecker) {
+	c.ParallelHealthChecks()
 }

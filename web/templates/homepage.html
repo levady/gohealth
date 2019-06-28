@@ -3,24 +3,19 @@
     <title>Welcome to GO Health</title>
   </head>
   <body>
-    <p>
-      {{if .ErrorData }}
-        {{.ErrorData.Msg}}
-      {{end}}
-    </p>
-
+    {{if .ErrorData }}
+      <div class="error">{{.ErrorData.Msg}}</div>
+    {{end}}
     <p>
       <form action="/sites/save" method="POST">
         <div>Check <input type="text" name="url"><input type="submit" value="Go"></div>
       </form>
     </p>
-
     <ul class="sites">
       {{range .Data}}
         <li>{{.URL}} - {{.Healthy}}</li><br />
       {{end}}
     </ul>
-
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   </body>
 </html>
