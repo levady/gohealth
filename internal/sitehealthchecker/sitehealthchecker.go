@@ -9,8 +9,8 @@ import (
 
 // Site represents Site data
 type Site struct {
-	URL     string
-	Healthy interface{}
+	URL     string      `json:"url"`
+	Healthy interface{} `json:"healthy"`
 }
 
 // SiteHealthChecker represents SiteHealthChecker service

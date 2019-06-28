@@ -1,6 +1,7 @@
 package httphandlers
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 
@@ -47,6 +48,25 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// HealthChecks execute health checks on all stored sites
+func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	handler.Checker.RunHealthChecks()
+
+	json, err := json.Marshal(handler.Checker.Sites)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
 }
 
 func renderHomepage(w http.ResponseWriter, p Payload) {
