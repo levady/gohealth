@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/levady/gohealth/cmd/serverd/httphandlers/home"
+	"github.com/levady/gohealth/cmd/gohealth/httphandlers"
 )
 
 func main() {
-	http.HandleFunc("/", home.Index)
+	http.HandleFunc("/", httphandlers.Homepage)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
