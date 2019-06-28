@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
@@ -38,7 +39,7 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := r.FormValue("url")
-	s := sitehealthchecker.Site{URL: url, Healthy: nil}
+	s := sitehealthchecker.Site{URL: strings.TrimSpace(url), Healthy: nil}
 
 	if err := handler.Checker.AddSite(s); err != nil {
 		errData := struct{ Msg string }{err.Error()}
