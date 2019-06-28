@@ -113,6 +113,10 @@ func (shc *SiteHealthChecker) ParallelHealthChecks() {
 	}
 }
 
+func (s *Site) HealthyIsNotNil() bool {
+	return s.Healthy != nil
+}
+
 func checkSiteWithTimeout(url string, timeout time.Duration) (*http.Response, error) {
 	client := http.Client{Timeout: timeout}
 	return client.Get(url)

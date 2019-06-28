@@ -1,21 +1,59 @@
-<html>
+<!doctype html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <title>Welcome to GO Health</title>
   </head>
-  <body>
-    {{if .ErrorData }}
-      <div class="error">{{.ErrorData.Msg}}</div>
-    {{end}}
-    <p>
-      <form action="/sites/save" method="POST">
-        <div>Check <input type="text" name="url"><input type="submit" value="Go"></div>
-      </form>
-    </p>
-    <ul class="sites">
-      {{range .Data}}
-        <li>{{.URL}} - {{.Healthy}}</li><br />
-      {{end}}
-    </ul>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm"></div>
+        <div class="col-sm">
+          <div class="row mt-4">
+            <div class="col-2 col-md-1"></div>
+            <div class="col-sm">
+              {{if .ErrorData }}
+                <div class="alert alert-danger" role="alert">
+                  {{.ErrorData.Msg}}
+                </div>
+              {{end}}
+              <div class="d-flex justify-content-center">
+                <form action="/sites/save" method="POST" class="form-inline">
+                  <div class="form-group">
+                    <p class="text-center mt-3">Check</p>
+                  </div>
+                  <div class="form-group ml-2">
+                    <label for="inputUrl" class="sr-only">URL</label>
+                    <input type="text" name="url" class="form-control" id="inputUrl" placeholder="URL">
+                  </div>
+                  <button type="submit" class="btn btn-primary ml-2">Go</button>
+                </form>
+              </div>
+              <ul class="sites list-group mt-2">
+                {{range .Data}}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <i>{{.URL}}</i>
+                    {{ if .HealthyIsNotNil }}
+                      <span>
+                        {{if .Healthy}}
+                          <i class="fa fa-check fa-3" aria-hidden="true"></i>
+                        {{else}}
+                          <i class="fa fa-times fa-3" aria-hidden="true"></i>
+                        {{end}}
+                      </span>
+                    {{end}}
+                  </li>
+                {{end}}
+              </ul>
+            </div>
+            <div class="col-2 col-md-1"></div>
+          </div>
+        </div>
+        <div class="col-sm"></div>
+      </div>
+    </div>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   </body>
 </html>
@@ -26,7 +64,11 @@
       $.getJSON( "/ajax/sites/check", function(sites) {
         let sitesHtml = ""
         for (const site of sites) {
-          sitesHtml += "<li>" + site.url + " - " + site.healthy + "</li><br />"
+          let iconHtml = `<i class="fa fa-check fa-3" aria-hidden="true"></i>`
+          if (!site.healthy) {
+            iconHtml = `<i class="fa fa-times fa-3" aria-hidden="true"></i>`
+          }
+          sitesHtml += `<li class="list-group-item d-flex justify-content-between align-items-center"><i>${site.url}</i><span>${iconHtml}</span></li>`
         }
         $(".sites").html(sitesHtml)
       });
