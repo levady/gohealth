@@ -57,7 +57,7 @@ func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	handler.Checker.RunHealthChecks()
+	handler.Checker.ParallelHealthChecks()
 
 	json, err := json.Marshal(handler.Checker.Sites)
 	if err != nil {

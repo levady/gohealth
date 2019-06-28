@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"runtime"
+	"sync"
 	"time"
 )
 
@@ -18,6 +20,8 @@ type SiteHealthChecker struct {
 	Sites   []*Site
 	Timeout time.Duration
 }
+
+var mutex sync.Mutex
 
 // New creates a new SiteHealthChecker
 func New(timeout time.Duration) SiteHealthChecker {
@@ -38,15 +42,19 @@ func (shc *SiteHealthChecker) AddSite(s Site) error {
 		return errors.New("Site URL must begin with http or https")
 	}
 
-	shc.Sites = append(shc.Sites, &s)
+	mutex.Lock()
+	{
+		shc.Sites = append(shc.Sites, &s)
+	}
+	mutex.Unlock()
 
 	return nil
 }
 
 var siteChecker = checkSiteWithTimeout
 
-// RunHealthChecks run health checks on all stored Sites
-func (shc *SiteHealthChecker) RunHealthChecks() {
+// SerialHealthChecks run health checks on all stored Sites in serial
+func (shc *SiteHealthChecker) SerialHealthChecks() {
 	for idx := range shc.Sites {
 		s := shc.Sites[idx]
 		resp, err := siteChecker(s.URL, shc.Timeout)
@@ -55,6 +63,41 @@ func (shc *SiteHealthChecker) RunHealthChecks() {
 		} else {
 			s.Healthy = true
 		}
+	}
+}
+
+// ParallelHealthChecks run health checks on all stored Sites in parallel
+func (shc *SiteHealthChecker) ParallelHealthChecks() {
+	sitesLen := len(shc.Sites)
+	resultCh := make(chan bool, sitesLen)
+
+	grs := runtime.NumCPU()
+	batchCh := make(chan bool, grs)
+
+	for idx := 0; idx < sitesLen; idx++ {
+		go func(i int) {
+			batchCh <- true
+			{
+				s := shc.Sites[i]
+				resp, err := siteChecker(s.URL, shc.Timeout)
+				mutex.Lock()
+				{
+					if err != nil || resp.StatusCode != 200 {
+						s.Healthy = false
+					} else {
+						s.Healthy = true
+					}
+				}
+				mutex.Unlock()
+				resultCh <- true
+			}
+			<-batchCh
+		}(idx)
+	}
+
+	for sitesLen > 0 {
+		<-resultCh
+		sitesLen--
 	}
 }
 

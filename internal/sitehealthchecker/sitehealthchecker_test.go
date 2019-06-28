@@ -96,7 +96,7 @@ func TestAddSite(t *testing.T) {
 	}
 }
 
-func TestRunHealthChecks(t *testing.T) {
+func TestParallelHealthChecks(t *testing.T) {
 	// Mocking
 	implementedSiteChecker := siteChecker
 	defer func() {
@@ -123,7 +123,7 @@ func TestRunHealthChecks(t *testing.T) {
 		}
 	}
 
-	shc.RunHealthChecks()
+	shc.ParallelHealthChecks()
 
 	if shc.Sites[0].Healthy == true {
 		t.Errorf("Expected Site1 %v to timeout.", shc.Sites[0].URL)
