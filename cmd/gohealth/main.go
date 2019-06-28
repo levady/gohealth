@@ -16,5 +16,6 @@ func main() {
 	}
 
 	http.HandleFunc("/", shh.Homepage)
+	http.HandleFunc("/sites/save", shh.Save)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

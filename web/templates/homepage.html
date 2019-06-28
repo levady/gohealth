@@ -1,8 +1,22 @@
 <html>
   <head></head>
   <body>
-    <form action="/add_site" method="POST">
-      <div>Check <input type="text" name="url"><input type="submit" value="Go"></div>
-    </form>
+    <p>
+      {{if .ErrorData }}
+        {{.ErrorData.Msg}}
+      {{end}}
+    </p>
+
+    <p>
+      <form action="/sites/save" method="POST">
+        <div>Check <input type="text" name="url"><input type="submit" value="Go"></div>
+      </form>
+    </p>
+
+    <ul>
+      {{range .Data}}
+        <li>{{.URL}}</li>
+      {{end}}
+    </ul>
   </body>
 </html>
