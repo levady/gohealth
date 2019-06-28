@@ -74,6 +74,25 @@ func TestAddSite(t *testing.T) {
 			exp:    0,
 			hasErr: true,
 		},
+		{
+			name: "Adding duplicate Sites",
+			input: []Site{
+				Site{
+					URL:     "https://golang.org/doc/articles/wiki/",
+					Healthy: nil,
+				},
+				Site{
+					URL:     "https://google.com/",
+					Healthy: nil,
+				},
+				Site{
+					URL:     "https://golang.org/doc/articles/wiki/",
+					Healthy: nil,
+				},
+			},
+			exp:    2,
+			hasErr: false,
+		},
 	}
 
 	for _, tc := range testCases {

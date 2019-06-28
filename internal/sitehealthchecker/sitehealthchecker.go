@@ -33,6 +33,7 @@ func New(timeout time.Duration) SiteHealthChecker {
 
 // AddSite add a single site to the Sites slice
 func (shc *SiteHealthChecker) AddSite(s Site) error {
+	// Validate URL
 	u, err := url.Parse(s.URL)
 	if err != nil {
 		return errors.New("Site URL is not valid")
@@ -42,11 +43,22 @@ func (shc *SiteHealthChecker) AddSite(s Site) error {
 		return errors.New("Site URL must begin with http or https")
 	}
 
-	mutex.Lock()
-	{
-		shc.Sites = append(shc.Sites, &s)
+	// Validate duplicate URL
+	duplicate := false
+	for i := range shc.Sites {
+		if shc.Sites[i].URL == s.URL {
+			duplicate = true
+			break
+		}
 	}
-	mutex.Unlock()
+
+	if !duplicate {
+		mutex.Lock()
+		{
+			shc.Sites = append(shc.Sites, &s)
+		}
+		mutex.Unlock()
+	}
 
 	return nil
 }
