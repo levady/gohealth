@@ -13,6 +13,7 @@ import (
 
 	"github.com/levady/gohealth/cmd/gohealth/httphandlers"
 	"github.com/levady/gohealth/internal/platform/sitestore"
+	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
 
 type config struct {
@@ -80,6 +81,18 @@ func run() error {
 		serverErrors <- app.ListenAndServe()
 	}()
 
+	// Run a ticker that will check the health of all sites every 15 seconds
+	ticker := time.NewTicker(15 * time.Second)
+
+	go func() {
+		log.Printf("main : Site health checker running")
+		for {
+			<-ticker.C
+			log.Printf("main : ticker : Run health checks")
+			sitehealthchecker.ParallelHealthChecks(&str, 800*time.Millisecond)
+		}
+	}()
+
 	// =========================================================================
 	// Shutdown
 
@@ -89,7 +102,10 @@ func run() error {
 		return err
 
 	case sig := <-shutdown:
-		log.Printf("main : %v : Start shutdown", sig)
+		log.Printf("main : %v : Shuttting down site health checker", sig)
+		ticker.Stop()
+
+		log.Printf("main : %v : Shuttting down app", sig)
 
 		// Give outstanding requests a deadline for completion.
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -117,10 +133,7 @@ func run() error {
 func handler(logger *log.Logger, str *sitestore.Store) http.Handler {
 	handler := http.DefaultServeMux
 
-	shh := httphandlers.SiteHealthHandler{
-		SiteStore:           str,
-		HealtchCheckTimeout: 800 * time.Millisecond, // TODO: Make this as a config??
-	}
+	shh := httphandlers.SiteHealthHandler{SiteStore: str}
 
 	handler.HandleFunc("/", shh.Homepage)
 	handler.HandleFunc("/sites/save", shh.Save)

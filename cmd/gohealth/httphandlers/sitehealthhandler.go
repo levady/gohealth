@@ -5,10 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/levady/gohealth/internal/platform/sitestore"
-	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
 
 // Payload represents data to be displayed in the HTML template
@@ -19,11 +17,9 @@ type Payload struct {
 
 // SiteHealthHandler represents SiteHealthHandler data
 type SiteHealthHandler struct {
-	SiteStore           *sitestore.Store
-	HealtchCheckTimeout time.Duration
+	SiteStore *sitestore.Store
 }
 
-var runHealthChecks = healthChecksMethod
 var homepageTplPath = "web/templates/homepage.html"
 
 // Homepage renders the home page
@@ -64,8 +60,6 @@ func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	runHealthChecks(handler.SiteStore, handler.HealtchCheckTimeout)
-
 	json, err := json.Marshal(handler.SiteStore.List())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,8 +74,4 @@ func renderHomepage(w http.ResponseWriter, p Payload, statusCode int) error {
 	t, _ := template.ParseFiles(homepageTplPath)
 	w.WriteHeader(statusCode)
 	return t.Execute(w, p)
-}
-
-func healthChecksMethod(str *sitestore.Store, to time.Duration) {
-	sitehealthchecker.ParallelHealthChecks(str, to)
 }

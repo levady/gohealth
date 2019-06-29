@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/levady/gohealth/internal/platform/sitestore"
 )
@@ -33,10 +32,7 @@ func TestHomepage(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	shh := SiteHealthHandler{
-		SiteStore:           &str,
-		HealtchCheckTimeout: 800 * time.Millisecond,
-	}
+	shh := SiteHealthHandler{SiteStore: &str}
 	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
 	resp := rr.Result()
 
@@ -61,10 +57,7 @@ func TestHomepage_NotFound(t *testing.T) {
 
 	// Routing
 	str := sitestore.NewStore()
-	shh := SiteHealthHandler{
-		SiteStore:           &str,
-		HealtchCheckTimeout: 800 * time.Millisecond,
-	}
+	shh := SiteHealthHandler{SiteStore: &str}
 	rr := httptest.NewRecorder()
 	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
 	resp := rr.Result()
@@ -88,10 +81,7 @@ func TestSave(t *testing.T) {
 	// Routing
 	rr := httptest.NewRecorder()
 	str := sitestore.NewStore()
-	shh := SiteHealthHandler{
-		SiteStore:           &str,
-		HealtchCheckTimeout: 800 * time.Millisecond,
-	}
+	shh := SiteHealthHandler{SiteStore: &str}
 	http.HandlerFunc(shh.Save).ServeHTTP(rr, req)
 	resp := rr.Result()
 
@@ -127,10 +117,7 @@ func TestSave_Fail(t *testing.T) {
 	// Routing
 	rr := httptest.NewRecorder()
 	str := sitestore.NewStore()
-	shh := SiteHealthHandler{
-		SiteStore:           &str,
-		HealtchCheckTimeout: 800 * time.Millisecond,
-	}
+	shh := SiteHealthHandler{SiteStore: &str}
 	http.HandlerFunc(shh.Save).ServeHTTP(rr, req)
 	resp := rr.Result()
 
@@ -147,13 +134,6 @@ func TestSave_Fail(t *testing.T) {
 }
 
 func TestHealthChecks(t *testing.T) {
-	// Mocking
-	implementedHealthChecks := runHealthChecks
-	defer func() {
-		runHealthChecks = implementedHealthChecks
-	}()
-	runHealthChecks = func(_ *sitestore.Store, _ time.Duration) {}
-
 	// Request
 	req, err := http.NewRequest("GET", "/ajax/sites/check", nil)
 	if err != nil {
@@ -167,10 +147,7 @@ func TestHealthChecks(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	shh := SiteHealthHandler{
-		SiteStore:           &str,
-		HealtchCheckTimeout: 800 * time.Millisecond,
-	}
+	shh := SiteHealthHandler{SiteStore: &str}
 	http.HandlerFunc(shh.HealthChecks).ServeHTTP(rr, req)
 	resp := rr.Result()
 
