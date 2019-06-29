@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
     <title>Welcome to GO Health</title>
   </head>
     <div class="container-fluid">
@@ -34,15 +34,17 @@
               <ul class="sites list-group mt-2">
                 {{range .Data}}
                   <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <i>{{.URL}}</i>
+                    <i>{{.ID}}. {{.URL}}</i>
                     {{ if .HealthyIsNotNil }}
                       <span>
                         {{if .Healthy}}
-                          <i class="fa fa-check fa-3" aria-hidden="true"></i>
+                          <i class="fas fa-check fa-3"></i>
                         {{else}}
-                          <i class="fa fa-times fa-3" aria-hidden="true"></i>
+                          <i class="fas fa-times fa-3"></i>
                         {{end}}
                       </span>
+                    {{else}}
+                      <i class="fas fa-spinner fa-pulse"></i>
                     {{end}}
                   </li>
                 {{end}}
@@ -60,15 +62,21 @@
 
 <script type="text/javascript">
   $(document).ready(function(){
+    function iconHtml(site) {
+      if (site.healthy === null) {
+        return `<i class="fas fa-spinner fa-pulse"></i>`
+      } else if (site.healthy) {
+        return `<i class="fas fa-check fa-3"></i>`
+      } else {
+        return `<i class="fas fa-times fa-3"></i>`
+      }
+    }
+
     setInterval(function(){
       $.getJSON( "/ajax/sites/check", function(sites) {
         let sitesHtml = ""
         for (const site of sites) {
-          let iconHtml = `<i class="fa fa-check fa-3" aria-hidden="true"></i>`
-          if (!site.healthy) {
-            iconHtml = `<i class="fa fa-times fa-3" aria-hidden="true"></i>`
-          }
-          sitesHtml += `<li class="list-group-item d-flex justify-content-between align-items-center"><i>${site.url}</i><span>${iconHtml}</span></li>`
+          sitesHtml += `<li class="list-group-item d-flex justify-content-between align-items-center"><i>${site.id}. ${site.url}</i><span>${iconHtml(site)}</span></li>`
         }
         $(".sites").html(sitesHtml)
       });
