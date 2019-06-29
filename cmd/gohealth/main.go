@@ -138,6 +138,7 @@ func handler(logger *log.Logger, str *sitestore.Store) http.Handler {
 	handler.HandleFunc("/", shh.Homepage)
 	handler.HandleFunc("/sites/save", shh.Save)
 	handler.HandleFunc("/ajax/sites/check", shh.HealthChecks)
+	handler.HandleFunc("/ajax/sites/delete/", shh.Delete)
 
 	return handler
 }
