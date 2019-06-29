@@ -164,29 +164,77 @@ func TestUpdateHealth(t *testing.T) {
 	str.Add(site1)
 
 	var testCases = []struct {
-		name  string
-		input bool
-		exp   bool
+		name   string
+		siteID int64
+		input  bool
+		exp    interface{}
+		hasErr bool
 	}{
 		{
-			name:  "Update to health to true",
-			input: true,
-			exp:   true,
+			name:   "Update to health to true",
+			siteID: 1,
+			input:  true,
+			exp:    true,
+			hasErr: false,
 		},
 		{
-			name:  "Update to health to false",
-			input: false,
-			exp:   false,
+			name:   "Update to health to false",
+			siteID: 1,
+			input:  false,
+			exp:    false,
+			hasErr: false,
+		},
+		{
+			name:   "Updating a site that does not exist",
+			siteID: 100,
+			input:  true,
+			exp:    nil,
+			hasErr: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := str.sites[1]
-			str.UpdateHealth(s.ID, tc.input)
+			err := str.UpdateHealth(tc.siteID, tc.input)
 
-			if s.Healthy != tc.exp {
+			if tc.hasErr && err == nil {
+				t.Errorf("Expected to return an error but got nil")
+			}
+
+			s := str.sites[tc.siteID]
+			if !tc.hasErr && s.Healthy != tc.exp {
 				t.Errorf("Expected site to be updated to %v but got %v.", tc.exp, s.Healthy)
+			}
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	str := NewStore()
+	str.Add(site1)
+
+	var testCases = []struct {
+		name   string
+		siteID int64
+		exp    interface{}
+	}{
+		{
+			name:   "Deleting an existing site",
+			siteID: 1,
+			exp:    nil,
+		},
+		{
+			name:   "Deleting a site that does not exist",
+			siteID: 100,
+			exp:    nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			str.Delete(tc.siteID)
+			if s, ok := str.sites[tc.siteID]; ok {
+				t.Errorf("Expected site to be deleted but got %v.", s)
 			}
 		})
 	}
