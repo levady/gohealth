@@ -9,11 +9,10 @@
   </head>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-sm"></div>
-        <div class="col-sm">
+        <div class="col-md">
           <div class="row mt-4">
-            <div class="col-2 col-md-1"></div>
-            <div class="col-sm">
+            <div class="col-2"></div>
+            <div class="col-md">
               {{if .ErrorData }}
                 <div class="alert alert-danger" role="alert">
                   {{.ErrorData.Msg}}
@@ -35,25 +34,33 @@
                 {{range .Data}}
                   <li class="list-group-item d-flex justify-content-between align-items-center">
                     <i>{{.ID}}. {{.URL}}</i>
-                    {{ if .HealthyIsNotNil }}
-                      <span>
-                        {{if .Healthy}}
-                          <i class="fas fa-check fa-3"></i>
-                        {{else}}
-                          <i class="fas fa-times fa-3"></i>
-                        {{end}}
-                      </span>
-                    {{else}}
-                      <i class="fas fa-spinner fa-pulse"></i>
-                    {{end}}
+                    <span>
+                      <div class="btn-toolbar" role="toolbar">
+                        <div class="btn-group mr-2" role="group">
+                          <button type="button" class="btn btn-outline-dark">
+                            {{ if .HealthyIsNotNil }}
+                              {{if .Healthy}}
+                                <i class="fas fa-check fa-sm"></i>
+                              {{else}}
+                                <i class="fas fa-times fa-lg"></i>
+                              {{end}}
+                            {{else}}
+                              <i class="fas fa-spinner fa-pulse fa-sm"></i>
+                            {{end}}
+                          </button>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Third group">
+                          <button type="button" class="btn btn btn-outline-danger delete-site" data-id="{{.ID}}">delete</button>
+                        </div>
+                      </div>
+                    </span>
                   </li>
                 {{end}}
               </ul>
             </div>
-            <div class="col-2 col-md-1"></div>
+            <div class="col-2"></div>
           </div>
         </div>
-        <div class="col-sm"></div>
       </div>
     </div>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -62,13 +69,28 @@
 
 <script type="text/javascript">
   $(document).ready(function(){
+    function delete_site() {
+      const id = $(this).attr('data-id');
+      $.ajax({
+        url: '/ajax/sites/delete/' + id,
+        type: 'DELETE',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function(response) {
+          // Too lazy to do some fancy UI-fu, sorry...
+          location.reload();
+        }
+      });
+    }
+    $(".delete-site").on('click', delete_site);
+
     function iconHtml(site) {
       if (site.healthy === null) {
-        return `<i class="fas fa-spinner fa-pulse"></i>`
+        return `<i class="fas fa-spinner fa-pulse fa-sm"></i>`
       } else if (site.healthy) {
-        return `<i class="fas fa-check fa-3"></i>`
+        return `<i class="fas fa-check fa-sm"></i>`
       } else {
-        return `<i class="fas fa-times fa-3"></i>`
+        return `<i class="fas fa-times fa-lg"></i>`
       }
     }
 
@@ -76,9 +98,26 @@
       $.getJSON( "/ajax/sites/check", function(sites) {
         let sitesHtml = ""
         for (const site of sites) {
-          sitesHtml += `<li class="list-group-item d-flex justify-content-between align-items-center"><i>${site.id}. ${site.url}</i><span>${iconHtml(site)}</span></li>`
+          sitesHtml += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <i>${site.id}. ${site.url}</i>
+              <span>
+                <div class="btn-toolbar" role="toolbar">
+                  <div class="btn-group mr-2" role="group">
+                    <button type="button" class="btn btn-outline-dark">
+                        ${iconHtml(site)}
+                    </button>
+                  </div>
+                  <div class="btn-group" role="group" aria-label="Third group">
+                    <button type="button" class="btn btn-outline-danger delete-site" data-id="${site.id}">delete</button>
+                  </div>
+                </div>
+              </span>
+            </li>
+          `
         }
         $(".sites").html(sitesHtml)
+        $(".delete-site").on('click', delete_site);
       });
     }, 5000);
   });

@@ -81,13 +81,31 @@ func (str *Store) Add(st Site) error {
 }
 
 // UpdateHealth update the health status of a site
-func (str *Store) UpdateHealth(siteID int64, status bool) {
+func (str *Store) UpdateHealth(siteID int64, status bool) error {
 	str.Lock()
 	defer str.Unlock()
 
-	if s, ok := str.sites[siteID]; ok {
-		s.Healthy = status
+	s, found := str.sites[siteID]
+
+	if !found {
+		return errors.New("Site does not exist")
 	}
+
+	s.Healthy = status
+	return nil
+}
+
+// Delete deletes a site from the store
+func (str *Store) Delete(siteID int64) error {
+	str.Lock()
+	defer str.Unlock()
+
+	if _, ok := str.sites[siteID]; !ok {
+		return errors.New("Site does not exist")
+	}
+
+	delete(str.sites, siteID)
+	return nil
 }
 
 // HealthyIsNotNil returns false if Healthy attribute is not nil
