@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/levady/gohealth/internal/platform/sitestore"
@@ -51,6 +52,38 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// Delete deletes a site from the store
+func (handler *SiteHealthHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	siteIDStr := r.URL.Path[len("/ajax/sites/delete/"):]
+	siteID, err := strconv.ParseInt(siteIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "500 internal server error.", http.StatusInternalServerError)
+		return
+	}
+
+	if err := handler.SiteStore.Delete(siteID); err != nil {
+		http.Error(w, "404 not found.", http.StatusNotFound)
+		return
+	}
+
+	// Must return JSON response, if not jQuery won't fire the `success` callback and
+	// fire the error callback instead....
+	json, err := json.Marshal(struct{}{})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(json)
 }
 
 // HealthChecks execute health checks on all stored sites

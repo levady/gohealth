@@ -133,6 +133,62 @@ func TestSave_Fail(t *testing.T) {
 	}
 }
 
+func TestDelete(t *testing.T) {
+	var testCases = []struct {
+		name            string
+		siteID          string
+		expStatusCode   int
+		expResponseBody string
+		hasSite         bool
+	}{
+		{
+			name:            "Deleting an existing site",
+			siteID:          "1",
+			expStatusCode:   http.StatusOK,
+			expResponseBody: "{}",
+			hasSite:         true,
+		},
+		{
+			name:            "Deleting a non existing site",
+			siteID:          "100",
+			expStatusCode:   http.StatusNotFound,
+			expResponseBody: "404 not found. \n",
+			hasSite:         false,
+		},
+	}
+
+	for _, tc := range testCases {
+		str := sitestore.NewStore()
+		// Data preparations
+		if tc.hasSite {
+			s := sitestore.Site{URL: "https://google.com"}
+			str.Add(s)
+		}
+
+		// Request
+		req, err := http.NewRequest("DELETE", "/ajax/sites/delete/"+tc.siteID, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Routing
+		rr := httptest.NewRecorder()
+		shh := SiteHealthHandler{SiteStore: &str}
+		http.HandlerFunc(shh.Delete).ServeHTTP(rr, req)
+		resp := rr.Result()
+
+		// Expectations
+		if tc.expStatusCode != resp.StatusCode {
+			t.Errorf("Unexpected status code: %d", resp.StatusCode)
+		}
+
+		_, e := regexp.MatchString(tc.expResponseBody, rr.Body.String())
+		if e != nil {
+			t.Errorf("Unexpected body %v", rr.Body.String())
+		}
+	}
+}
+
 func TestHealthChecks(t *testing.T) {
 	// Request
 	req, err := http.NewRequest("GET", "/ajax/sites/check", nil)
