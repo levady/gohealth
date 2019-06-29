@@ -5,7 +5,9 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/levady/gohealth/internal/platform/sitestore"
 	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
 
@@ -17,7 +19,8 @@ type Payload struct {
 
 // SiteHealthHandler represents SiteHealthHandler data
 type SiteHealthHandler struct {
-	Checker *sitehealthchecker.SiteHealthChecker
+	SiteStore           *sitestore.Store
+	HealtchCheckTimeout time.Duration
 }
 
 var runHealthChecks = healthChecksMethod
@@ -30,7 +33,7 @@ func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	p := Payload{Data: handler.Checker.Sites}
+	p := Payload{Data: handler.SiteStore.List()}
 	renderHomepage(w, p, http.StatusOK)
 }
 
@@ -42,11 +45,11 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := r.FormValue("url")
-	s := sitehealthchecker.Site{URL: strings.TrimSpace(url), Healthy: nil}
+	s := sitestore.Site{URL: strings.TrimSpace(url), Healthy: nil}
 
-	if err := handler.Checker.AddSite(s); err != nil {
+	if err := handler.SiteStore.Add(s); err != nil {
 		errData := struct{ Msg string }{err.Error()}
-		p := Payload{Data: handler.Checker.Sites, ErrorData: errData}
+		p := Payload{Data: handler.SiteStore.List(), ErrorData: errData}
 		renderHomepage(w, p, http.StatusUnprocessableEntity)
 		return
 	}
@@ -61,9 +64,9 @@ func (handler *SiteHealthHandler) HealthChecks(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	runHealthChecks(handler.Checker)
+	runHealthChecks(handler.SiteStore, handler.HealtchCheckTimeout)
 
-	json, err := json.Marshal(handler.Checker.Sites)
+	json, err := json.Marshal(handler.SiteStore.List())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,6 +82,6 @@ func renderHomepage(w http.ResponseWriter, p Payload, statusCode int) error {
 	return t.Execute(w, p)
 }
 
-func healthChecksMethod(c *sitehealthchecker.SiteHealthChecker) {
-	c.ParallelHealthChecks()
+func healthChecksMethod(str *sitestore.Store, to time.Duration) {
+	sitehealthchecker.ParallelHealthChecks(str, to)
 }
