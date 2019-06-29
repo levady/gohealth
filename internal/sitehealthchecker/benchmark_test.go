@@ -19,15 +19,15 @@ func BenchmarkParallelHealthChecks(b *testing.B) {
 	site4 := Site{URL: "https://smartystreets.com/blog/2015/02/go-testing-part-1-vanillla"}
 	site5 := Site{URL: "http://stat.us/200?sleep=10000"}
 
-	shc := New(800 * time.Millisecond)
-	shc.AddSite(site1)
-	shc.AddSite(site2)
-	shc.AddSite(site3)
-	shc.AddSite(site4)
-	shc.AddSite(site5)
+	store := NewStore()
+	store.Add(site1)
+	store.Add(site2)
+	store.Add(site3)
+	store.Add(site4)
+	store.Add(site5)
 
 	for i := 0; i < b.N; i++ {
-		shc.ParallelHealthChecks()
+		ParallelHealthChecks(&store, 800*time.Millisecond)
 	}
 }
 
@@ -38,14 +38,14 @@ func BenchmarkSerialHealthChecks(b *testing.B) {
 	site4 := Site{URL: "https://smartystreets.com/blog/2015/02/go-testing-part-1-vanillla"}
 	site5 := Site{URL: "http://stat.us/200?sleep=10000"}
 
-	shc := New(800 * time.Millisecond)
-	shc.AddSite(site1)
-	shc.AddSite(site2)
-	shc.AddSite(site3)
-	shc.AddSite(site4)
-	shc.AddSite(site5)
+	store := NewStore()
+	store.Add(site1)
+	store.Add(site2)
+	store.Add(site3)
+	store.Add(site4)
+	store.Add(site5)
 
 	for i := 0; i < b.N; i++ {
-		shc.SerialHealthChecks()
+		SerialHealthChecks(&store, 800*time.Millisecond)
 	}
 }

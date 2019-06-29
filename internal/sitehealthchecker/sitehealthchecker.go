@@ -1,87 +1,30 @@
 package sitehealthchecker
 
 import (
-	"errors"
 	"net/http"
-	"net/url"
 	"runtime"
-	"sync"
 	"time"
 )
-
-// Site represents Site data
-type Site struct {
-	URL     string      `json:"url"`
-	Healthy interface{} `json:"healthy"`
-}
-
-// SiteHealthChecker represents SiteHealthChecker service
-type SiteHealthChecker struct {
-	Sites   []*Site
-	Timeout time.Duration
-}
-
-var mutex sync.Mutex
-
-// New creates a new SiteHealthChecker
-func New(timeout time.Duration) SiteHealthChecker {
-	return SiteHealthChecker{
-		Sites:   make([]*Site, 0),
-		Timeout: timeout,
-	}
-}
-
-// AddSite add a single site to the Sites slice
-func (shc *SiteHealthChecker) AddSite(s Site) error {
-	// Validate URL
-	u, err := url.ParseRequestURI(s.URL)
-	if err != nil {
-		return errors.New("Site URL is not valid")
-	} else if u.Scheme == "" || u.Host == "" {
-		return errors.New("Site URL must be an absolute URL")
-	} else if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("Site URL must begin with http or https")
-	}
-
-	// Validate duplicate URL
-	duplicate := false
-	for i := range shc.Sites {
-		if shc.Sites[i].URL == s.URL {
-			duplicate = true
-			break
-		}
-	}
-
-	if !duplicate {
-		mutex.Lock()
-		{
-			shc.Sites = append(shc.Sites, &s)
-		}
-		mutex.Unlock()
-	}
-
-	return nil
-}
 
 var siteChecker = checkSiteWithTimeout
 
 // SerialHealthChecks run health checks on all stored Sites in serial
-func (shc *SiteHealthChecker) SerialHealthChecks() {
-	for idx := range shc.Sites {
-		s := shc.Sites[idx]
-		resp, err := siteChecker(s.URL, shc.Timeout)
+func SerialHealthChecks(store *Store, timeout time.Duration) {
+	for _, s := range store.List() {
+		resp, err := siteChecker(s.URL, timeout)
 		if err != nil || resp.StatusCode != 200 {
-			s.Healthy = false
+			store.UpdateHealth(s.ID, false)
 		} else {
-			s.Healthy = true
+			store.UpdateHealth(s.ID, true)
 		}
 	}
 }
 
 // ParallelHealthChecks run health checks on all stored Sites in parallel
-func (shc *SiteHealthChecker) ParallelHealthChecks() {
-	sitesLen := len(shc.Sites)
-	resultCh := make(chan bool, sitesLen)
+func ParallelHealthChecks(store *Store, timeout time.Duration) {
+	sites := store.List()
+	sitesLen := len(sites)
+	resultCh := make(chan bool, len(sites))
 
 	grs := runtime.NumCPU()
 	batchCh := make(chan bool, grs)
@@ -90,17 +33,13 @@ func (shc *SiteHealthChecker) ParallelHealthChecks() {
 		go func(i int) {
 			batchCh <- true
 			{
-				s := shc.Sites[i]
-				resp, err := siteChecker(s.URL, shc.Timeout)
-				mutex.Lock()
-				{
-					if err != nil || resp.StatusCode != 200 {
-						s.Healthy = false
-					} else {
-						s.Healthy = true
-					}
+				s := sites[i]
+				resp, err := siteChecker(s.URL, timeout)
+				if err != nil || resp.StatusCode != 200 {
+					store.UpdateHealth(s.ID, false)
+				} else {
+					store.UpdateHealth(s.ID, true)
 				}
-				mutex.Unlock()
 				resultCh <- true
 			}
 			<-batchCh
@@ -111,10 +50,6 @@ func (shc *SiteHealthChecker) ParallelHealthChecks() {
 		<-resultCh
 		sitesLen--
 	}
-}
-
-func (s *Site) HealthyIsNotNil() bool {
-	return s.Healthy != nil
 }
 
 func checkSiteWithTimeout(url string, timeout time.Duration) (*http.Response, error) {

@@ -27,14 +27,15 @@ func TestHomepage(t *testing.T) {
 	}
 
 	// Data preparation
-	shc := sitehealthchecker.New(800 * time.Millisecond)
+	str := sitehealthchecker.NewStore()
 	s := sitehealthchecker.Site{URL: "https://google.com"}
-	shc.AddSite(s)
+	str.Add(s)
 
 	// Routing
 	rr := httptest.NewRecorder()
 	shh := SiteHealthHandler{
-		Checker: &shc,
+		SiteStore:           &str,
+		HealtchCheckTimeout: 800 * time.Millisecond,
 	}
 	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
 	resp := rr.Result()
@@ -59,9 +60,10 @@ func TestHomepage_NotFound(t *testing.T) {
 	}
 
 	// Routing
-	shc := sitehealthchecker.New(800 * time.Millisecond)
+	str := sitehealthchecker.NewStore()
 	shh := SiteHealthHandler{
-		Checker: &shc,
+		SiteStore:           &str,
+		HealtchCheckTimeout: 800 * time.Millisecond,
 	}
 	rr := httptest.NewRecorder()
 	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
@@ -85,9 +87,10 @@ func TestSave(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	shc := sitehealthchecker.New(800 * time.Millisecond)
+	str := sitehealthchecker.NewStore()
 	shh := SiteHealthHandler{
-		Checker: &shc,
+		SiteStore:           &str,
+		HealtchCheckTimeout: 800 * time.Millisecond,
 	}
 	http.HandlerFunc(shh.Save).ServeHTTP(rr, req)
 	resp := rr.Result()
@@ -123,9 +126,10 @@ func TestSave_Fail(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	shc := sitehealthchecker.New(800 * time.Millisecond)
+	str := sitehealthchecker.NewStore()
 	shh := SiteHealthHandler{
-		Checker: &shc,
+		SiteStore:           &str,
+		HealtchCheckTimeout: 800 * time.Millisecond,
 	}
 	http.HandlerFunc(shh.Save).ServeHTTP(rr, req)
 	resp := rr.Result()
@@ -148,7 +152,7 @@ func TestHealthChecks(t *testing.T) {
 	defer func() {
 		runHealthChecks = implementedHealthChecks
 	}()
-	runHealthChecks = func(_ *sitehealthchecker.SiteHealthChecker) {}
+	runHealthChecks = func(_ *sitehealthchecker.Store, _ time.Duration) {}
 
 	// Request
 	req, err := http.NewRequest("GET", "/ajax/sites/check", nil)
@@ -157,14 +161,15 @@ func TestHealthChecks(t *testing.T) {
 	}
 
 	// Data preparations
-	shc := sitehealthchecker.New(800 * time.Millisecond)
+	str := sitehealthchecker.NewStore()
 	s := sitehealthchecker.Site{URL: "https://google.com"}
-	shc.AddSite(s)
+	str.Add(s)
 
 	// Routing
 	rr := httptest.NewRecorder()
 	shh := SiteHealthHandler{
-		Checker: &shc,
+		SiteStore:           &str,
+		HealtchCheckTimeout: 800 * time.Millisecond,
 	}
 	http.HandlerFunc(shh.HealthChecks).ServeHTTP(rr, req)
 	resp := rr.Result()
@@ -174,7 +179,7 @@ func TestHealthChecks(t *testing.T) {
 		t.Errorf("Unexpected status code %d", resp.StatusCode)
 	}
 
-	exp := string(`[{"url":"https://google.com","healthy":null}]`)
+	exp := string(`[{"id":1,"url":"https://google.com","healthy":null}]`)
 	if body := rr.Body.String(); exp != body {
 		t.Errorf("Unexpected body %v", body)
 	}
