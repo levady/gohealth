@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/levady/gohealth/internal/platform/sitestore"
 )
 
 var siteChecker = checkSiteWithTimeout
 
 // SerialHealthChecks run health checks on all stored Sites in serial
-func SerialHealthChecks(store *Store, timeout time.Duration) {
+func SerialHealthChecks(store *sitestore.Store, timeout time.Duration) {
 	for _, s := range store.List() {
 		resp, err := siteChecker(s.URL, timeout)
 		if err != nil || resp.StatusCode != 200 {
@@ -21,7 +23,7 @@ func SerialHealthChecks(store *Store, timeout time.Duration) {
 }
 
 // ParallelHealthChecks run health checks on all stored Sites in parallel
-func ParallelHealthChecks(store *Store, timeout time.Duration) {
+func ParallelHealthChecks(store *sitestore.Store, timeout time.Duration) {
 	sites := store.List()
 	sitesLen := len(sites)
 	resultCh := make(chan bool, len(sites))

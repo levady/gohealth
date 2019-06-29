@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/levady/gohealth/internal/platform/sitestore"
 	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
 
@@ -18,7 +19,7 @@ type Payload struct {
 
 // SiteHealthHandler represents SiteHealthHandler data
 type SiteHealthHandler struct {
-	SiteStore           *sitehealthchecker.Store
+	SiteStore           *sitestore.Store
 	HealtchCheckTimeout time.Duration
 }
 
@@ -44,7 +45,7 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := r.FormValue("url")
-	s := sitehealthchecker.Site{URL: strings.TrimSpace(url), Healthy: nil}
+	s := sitestore.Site{URL: strings.TrimSpace(url), Healthy: nil}
 
 	if err := handler.SiteStore.Add(s); err != nil {
 		errData := struct{ Msg string }{err.Error()}
@@ -81,6 +82,6 @@ func renderHomepage(w http.ResponseWriter, p Payload, statusCode int) error {
 	return t.Execute(w, p)
 }
 
-func healthChecksMethod(str *sitehealthchecker.Store, to time.Duration) {
+func healthChecksMethod(str *sitestore.Store, to time.Duration) {
 	sitehealthchecker.ParallelHealthChecks(str, to)
 }

@@ -1,4 +1,4 @@
-package sitehealthchecker
+package sitestore
 
 import (
 	"fmt"

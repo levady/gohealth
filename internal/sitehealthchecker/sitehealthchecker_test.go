@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/levady/gohealth/internal/platform/sitestore"
 )
 
 func TestParallelHealthChecks(t *testing.T) {
@@ -14,11 +16,11 @@ func TestParallelHealthChecks(t *testing.T) {
 		siteChecker = implementedSiteChecker
 	}()
 
-	site1 := Site{URL: "https://zempag.com"}
-	site2 := Site{URL: "https://www.google.com"}
-	site3 := Site{URL: "https://koprol.com"}
+	site1 := sitestore.Site{URL: "https://zempag.com"}
+	site2 := sitestore.Site{URL: "https://www.google.com"}
+	site3 := sitestore.Site{URL: "https://koprol.com"}
 
-	store := NewStore()
+	store := sitestore.NewStore()
 	store.Add(site1)
 	store.Add(site2)
 	store.Add(site3)
@@ -36,15 +38,17 @@ func TestParallelHealthChecks(t *testing.T) {
 
 	ParallelHealthChecks(&store, 800*time.Millisecond)
 
-	if s := store.sites[1]; s.Healthy == true {
+	sites := store.List()
+
+	if s := sites[0]; s.Healthy == true {
 		t.Errorf("Expected Site1 %v to timeout.", s.URL)
 	}
 
-	if s := store.sites[2]; s.Healthy == true {
+	if s := sites[1]; s.Healthy == true {
 		t.Errorf("Expected Site2 %v to return 500.", s.URL)
 	}
 
-	if s := store.sites[3]; s.Healthy == false {
+	if s := sites[2]; s.Healthy == false {
 		t.Errorf("Expected Site3 %v to be healthy.", s.URL)
 	}
 }

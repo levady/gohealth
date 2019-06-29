@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/levady/gohealth/cmd/gohealth/httphandlers"
-	"github.com/levady/gohealth/internal/sitehealthchecker"
+	"github.com/levady/gohealth/internal/platform/sitestore"
 )
 
 type config struct {
@@ -50,7 +50,7 @@ func run() error {
 	// Initializaing site memory store store
 
 	log.Printf("main : Initializing site memory store")
-	str := sitehealthchecker.NewStore()
+	str := sitestore.NewStore()
 
 	// =========================================================================
 	// App Starting
@@ -114,7 +114,7 @@ func run() error {
 	return nil
 }
 
-func handler(logger *log.Logger, str *sitehealthchecker.Store) http.Handler {
+func handler(logger *log.Logger, str *sitestore.Store) http.Handler {
 	handler := http.DefaultServeMux
 
 	shh := httphandlers.SiteHealthHandler{

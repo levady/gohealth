@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/levady/gohealth/internal/sitehealthchecker"
+	"github.com/levady/gohealth/internal/platform/sitestore"
 )
 
 func TestHomepage(t *testing.T) {
@@ -27,8 +27,8 @@ func TestHomepage(t *testing.T) {
 	}
 
 	// Data preparation
-	str := sitehealthchecker.NewStore()
-	s := sitehealthchecker.Site{URL: "https://google.com"}
+	str := sitestore.NewStore()
+	s := sitestore.Site{URL: "https://google.com"}
 	str.Add(s)
 
 	// Routing
@@ -60,7 +60,7 @@ func TestHomepage_NotFound(t *testing.T) {
 	}
 
 	// Routing
-	str := sitehealthchecker.NewStore()
+	str := sitestore.NewStore()
 	shh := SiteHealthHandler{
 		SiteStore:           &str,
 		HealtchCheckTimeout: 800 * time.Millisecond,
@@ -87,7 +87,7 @@ func TestSave(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	str := sitehealthchecker.NewStore()
+	str := sitestore.NewStore()
 	shh := SiteHealthHandler{
 		SiteStore:           &str,
 		HealtchCheckTimeout: 800 * time.Millisecond,
@@ -126,7 +126,7 @@ func TestSave_Fail(t *testing.T) {
 
 	// Routing
 	rr := httptest.NewRecorder()
-	str := sitehealthchecker.NewStore()
+	str := sitestore.NewStore()
 	shh := SiteHealthHandler{
 		SiteStore:           &str,
 		HealtchCheckTimeout: 800 * time.Millisecond,
@@ -152,7 +152,7 @@ func TestHealthChecks(t *testing.T) {
 	defer func() {
 		runHealthChecks = implementedHealthChecks
 	}()
-	runHealthChecks = func(_ *sitehealthchecker.Store, _ time.Duration) {}
+	runHealthChecks = func(_ *sitestore.Store, _ time.Duration) {}
 
 	// Request
 	req, err := http.NewRequest("GET", "/ajax/sites/check", nil)
@@ -161,8 +161,8 @@ func TestHealthChecks(t *testing.T) {
 	}
 
 	// Data preparations
-	str := sitehealthchecker.NewStore()
-	s := sitehealthchecker.Site{URL: "https://google.com"}
+	str := sitestore.NewStore()
+	s := sitestore.Site{URL: "https://google.com"}
 	str.Add(s)
 
 	// Routing
