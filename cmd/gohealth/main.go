@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"expvar"
 	"log"
 	"net/http"
@@ -118,11 +117,7 @@ func run() error {
 			err = server.Close()
 		}
 
-		// Log the status of this shutdown.
-		switch {
-		case sig == syscall.SIGSTOP:
-			return errors.New("integrity issue caused shutdown")
-		case err != nil:
+		if err != nil {
 			return err
 		}
 	}
