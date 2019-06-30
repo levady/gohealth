@@ -23,8 +23,15 @@ func SerialHealthChecks(store *sitestore.Store, timeout time.Duration) {
 }
 
 // ParallelHealthChecks run health checks on all stored Sites in parallel
-func ParallelHealthChecks(store *sitestore.Store, timeout time.Duration) {
-	sites := store.List()
+func ParallelHealthChecks(store *sitestore.Store, timeout time.Duration, lookbackPeriod int) {
+	var sites []sitestore.Site
+
+	if lookbackPeriod == 0 {
+		sites = store.List()
+	} else {
+		sites = store.ListFilter(lookbackPeriod)
+	}
+
 	sitesLen := len(sites)
 	resultCh := make(chan bool, len(sites))
 

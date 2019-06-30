@@ -29,7 +29,7 @@ func BenchmarkParallelHealthChecks(b *testing.B) {
 	store.Add(site5)
 
 	for i := 0; i < b.N; i++ {
-		ParallelHealthChecks(&store, 800*time.Millisecond)
+		ParallelHealthChecks(&store, 800*time.Millisecond, 0)
 	}
 }
 
