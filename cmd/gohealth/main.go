@@ -66,9 +66,9 @@ func run() error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
-	app := http.Server{
+	server := http.Server{
 		Addr:    cfg.Host,
-		Handler: handler(log, &str),
+		Handler: httphandlers.Routes(log, &str),
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a
@@ -77,8 +77,8 @@ func run() error {
 
 	// Start the service listening for requests.
 	go func() {
-		log.Printf("main : App listening on %s", app.Addr)
-		serverErrors <- app.ListenAndServe()
+		log.Printf("main : App listening on %s", server.Addr)
+		serverErrors <- server.ListenAndServe()
 	}()
 
 	// Run a ticker that will check the health of all sites every 15 seconds
@@ -112,10 +112,10 @@ func run() error {
 		defer cancel()
 
 		// Asking listener to shutdown and load shed.
-		err := app.Shutdown(ctx)
+		err := server.Shutdown(ctx)
 		if err != nil {
 			log.Printf("main : Graceful shutdown did not complete in %v : %v", 5*time.Second, err)
-			err = app.Close()
+			err = server.Close()
 		}
 
 		// Log the status of this shutdown.
@@ -128,17 +128,4 @@ func run() error {
 	}
 
 	return nil
-}
-
-func handler(logger *log.Logger, str *sitestore.Store) http.Handler {
-	handler := http.DefaultServeMux
-
-	shh := httphandlers.SiteHealthHandler{SiteStore: str}
-
-	handler.HandleFunc("/", shh.Homepage)
-	handler.HandleFunc("/sites/save", shh.Save)
-	handler.HandleFunc("/ajax/sites/check", shh.HealthChecks)
-	handler.HandleFunc("/ajax/sites/delete/", shh.Delete)
-
-	return handler
 }
