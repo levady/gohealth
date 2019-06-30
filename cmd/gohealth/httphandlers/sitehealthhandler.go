@@ -26,7 +26,7 @@ var homepageTplPath = "web/templates/homepage.html"
 // Homepage renders the home page
 func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" || r.URL.Path != "/" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -37,7 +37,7 @@ func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Reques
 // Save saves a site to the store
 func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 // Delete deletes a site from the store
 func (handler *SiteHealthHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "DELETE" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (handler *SiteHealthHandler) Delete(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := handler.SiteStore.Delete(siteID); err != nil {
-		http.Error(w, "404 not found.", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
