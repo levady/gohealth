@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"expvar"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -16,7 +18,8 @@ import (
 )
 
 type config struct {
-	Host string
+	Host           string
+	LookbackPeriod int
 }
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -42,12 +45,24 @@ func run() error {
 		host = ":8080"
 	}
 
-	cfg := config{
-		Host: host,
+	lookbackPeriod := 0
+	if lp := os.Getenv("LOOKBACK_PERIOD"); lp != "" {
+		var err error
+		lookbackPeriod, err = strconv.Atoi(lp)
+		if err != nil {
+			return errors.New("main : Failed parsing LOOKBACK_PERIOD config")
+		}
 	}
 
+	cfg := config{
+		Host:           host,
+		LookbackPeriod: lookbackPeriod,
+	}
+
+	log.Printf("main : Config :%v", cfg)
+
 	// =========================================================================
-	// Initializaing site memory store store
+	// Initializaing site memory store
 
 	log.Printf("main : Initializing site memory store")
 	str := sitestore.NewStore()
@@ -88,7 +103,7 @@ func run() error {
 		for {
 			<-ticker.C
 			log.Printf("main : ticker : Run health checks")
-			sitehealthchecker.ParallelHealthChecks(&str, 800*time.Millisecond)
+			sitehealthchecker.ParallelHealthChecks(&str, 800*time.Millisecond, cfg.LookbackPeriod)
 		}
 	}()
 
