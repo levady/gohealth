@@ -246,7 +246,7 @@ func TestHealthChecks(t *testing.T) {
 		t.Errorf("Unexpected status code %d", resp.StatusCode)
 	}
 
-	exp := string(`[{"id":1,"url":"https://google.com","healthy":null,"updated_at":"0001-01-01T00:00:00Z"}]`)
+	exp := string(`[{"id":1,"url":"https://google.com","status":0,"updated_at":"0001-01-01T00:00:00Z"}]`)
 	if body := rr.Body.String(); exp != body {
 		t.Errorf("Unexpected body %v", body)
 	}

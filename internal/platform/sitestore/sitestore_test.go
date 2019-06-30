@@ -84,14 +84,8 @@ func TestAdd(t *testing.T) {
 		{
 			name: "Adding multiple Sites",
 			input: []Site{
-				Site{
-					URL:     "https://golang.org/doc/articles/wiki/",
-					Healthy: nil,
-				},
-				Site{
-					URL:     "https://google.com/",
-					Healthy: nil,
-				},
+				Site{URL: "https://golang.org/doc/articles/wiki/"},
+				Site{URL: "https://google.com/"},
 			},
 			exp:    2,
 			hasErr: false,
@@ -99,10 +93,7 @@ func TestAdd(t *testing.T) {
 		{
 			name: "Adding an empty URL",
 			input: []Site{
-				Site{
-					URL:     "",
-					Healthy: nil,
-				},
+				Site{URL: ""},
 			},
 			exp:    0,
 			hasErr: true,
@@ -110,10 +101,7 @@ func TestAdd(t *testing.T) {
 		{
 			name: "Adding a non absolute URL",
 			input: []Site{
-				Site{
-					URL:     "/sites/save",
-					Healthy: nil,
-				},
+				Site{URL: "/sites/save"},
 			},
 			exp:    0,
 			hasErr: true,
@@ -121,10 +109,7 @@ func TestAdd(t *testing.T) {
 		{
 			name: "Adding URL that does not start with http or https",
 			input: []Site{
-				Site{
-					URL:     "ftp://websiteaddress.com",
-					Healthy: nil,
-				},
+				Site{URL: "ftp://websiteaddress.com"},
 			},
 			exp:    0,
 			hasErr: true,
@@ -132,18 +117,11 @@ func TestAdd(t *testing.T) {
 		{
 			name: "Adding duplicate Sites",
 			input: []Site{
+				Site{URL: "https://golang.org/doc/articles/wiki/"},
 				Site{
-					URL:     "https://golang.org/doc/articles/wiki/",
-					Healthy: nil,
+					URL: "https://google.com/",
 				},
-				Site{
-					URL:     "https://google.com/",
-					Healthy: nil,
-				},
-				Site{
-					URL:     "https://golang.org/doc/articles/wiki/",
-					Healthy: nil,
-				},
+				Site{URL: "https://golang.org/doc/articles/wiki/"},
 			},
 			exp:    2,
 			hasErr: false,
@@ -194,29 +172,29 @@ func TestUpdateHealth(t *testing.T) {
 	var testCases = []struct {
 		name   string
 		siteID int64
-		input  bool
-		exp    interface{}
+		input  int
+		exp    int
 		hasErr bool
 	}{
 		{
 			name:   "Update to health to true",
 			siteID: 1,
-			input:  true,
-			exp:    true,
+			input:  Healthy,
+			exp:    Healthy,
 			hasErr: false,
 		},
 		{
 			name:   "Update to health to false",
 			siteID: 1,
-			input:  false,
-			exp:    false,
+			input:  Unhealthy,
+			exp:    Unhealthy,
 			hasErr: false,
 		},
 		{
 			name:   "Updating a site that does not exist",
 			siteID: 100,
-			input:  true,
-			exp:    nil,
+			input:  Healthy,
+			exp:    Unknown,
 			hasErr: true,
 		},
 	}
@@ -230,8 +208,8 @@ func TestUpdateHealth(t *testing.T) {
 			}
 
 			s := str.sites[tc.siteID]
-			if !tc.hasErr && s.Healthy != tc.exp {
-				t.Errorf("Expected site to be updated to %v but got %v.", tc.exp, s.Healthy)
+			if !tc.hasErr && s.Status != tc.exp {
+				t.Errorf("Expected site to be updated to %v but got %v.", tc.exp, s.Status)
 			}
 
 			if !tc.hasErr && s.UpdatedAt.IsZero() {
@@ -267,40 +245,6 @@ func TestDelete(t *testing.T) {
 			str.Delete(tc.siteID)
 			if s, ok := str.sites[tc.siteID]; ok {
 				t.Errorf("Expected site to be deleted but got %v.", s)
-			}
-		})
-	}
-}
-
-func TestHealthyIsNotNil(t *testing.T) {
-	var testCases = []struct {
-		name  string
-		input interface{}
-		exp   bool
-	}{
-		{
-			name:  "Healthy is nil",
-			input: nil,
-			exp:   false,
-		},
-		{
-			name:  "Healthy is false",
-			input: false,
-			exp:   true,
-		},
-		{
-			name:  "Healthy is true",
-			input: true,
-			exp:   true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			s := Site{Healthy: tc.input}
-
-			if s.HealthyIsNotNil() != tc.exp {
-				t.Errorf("Expected site healthy to return %v but got %v.", tc.exp, s.HealthyIsNotNil())
 			}
 		})
 	}

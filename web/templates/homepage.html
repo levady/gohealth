@@ -38,14 +38,14 @@
                       <div class="btn-toolbar" role="toolbar">
                         <div class="btn-group mr-2" role="group">
                           <button type="button" class="btn btn-outline-dark">
-                            {{ if .HealthyIsNotNil }}
-                              {{if .Healthy}}
+                            {{if eq .Status 0 }}
+                              <i class="fas fa-spinner fa-pulse fa-sm"></i>
+                            {{else}}
+                              {{if eq .Status 1 }}
                                 <i class="fas fa-check fa-sm"></i>
                               {{else}}
                                 <i class="fas fa-times fa-lg"></i>
                               {{end}}
-                            {{else}}
-                              <i class="fas fa-spinner fa-pulse fa-sm"></i>
                             {{end}}
                           </button>
                         </div>
@@ -85,9 +85,9 @@
     $(".delete-site").on('click', delete_site);
 
     function iconHtml(site) {
-      if (site.healthy === null) {
+      if (site.status === 0) {
         return `<i class="fas fa-spinner fa-pulse fa-sm"></i>`
-      } else if (site.healthy) {
+      } else if (site.status === 1) {
         return `<i class="fas fa-check fa-sm"></i>`
       } else {
         return `<i class="fas fa-times fa-lg"></i>`

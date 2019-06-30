@@ -15,9 +15,9 @@ func SerialHealthChecks(store *sitestore.Store, timeout time.Duration) {
 	for _, s := range store.List() {
 		resp, err := siteChecker(s.URL, timeout)
 		if err != nil || resp.StatusCode != 200 {
-			store.UpdateHealth(s.ID, false)
+			store.UpdateHealth(s.ID, sitestore.Unhealthy)
 		} else {
-			store.UpdateHealth(s.ID, true)
+			store.UpdateHealth(s.ID, sitestore.Healthy)
 		}
 	}
 }
@@ -45,9 +45,9 @@ func ParallelHealthChecks(store *sitestore.Store, timeout time.Duration, lookbac
 				s := sites[i]
 				resp, err := siteChecker(s.URL, timeout)
 				if err != nil || resp.StatusCode != 200 {
-					store.UpdateHealth(s.ID, false)
+					store.UpdateHealth(s.ID, sitestore.Unhealthy)
 				} else {
-					store.UpdateHealth(s.ID, true)
+					store.UpdateHealth(s.ID, sitestore.Healthy)
 				}
 				resultCh <- true
 			}
