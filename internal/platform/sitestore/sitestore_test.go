@@ -158,7 +158,7 @@ func TestAdd_AutoIncrementID(t *testing.T) {
 	str.Add(site5)
 
 	for i := 0; i < len(str.sites); i++ {
-		_, ok := str.sites[int64(i+1)]
+		_, ok := str.sites[i+1]
 		if !ok {
 			t.Errorf("Expected to have key %d but got nil", i+1)
 		}
@@ -171,7 +171,7 @@ func TestUpdateHealth(t *testing.T) {
 
 	var testCases = []struct {
 		name   string
-		siteID int64
+		siteID int
 		input  int
 		exp    int
 		hasErr bool
@@ -225,7 +225,7 @@ func TestDelete(t *testing.T) {
 
 	var testCases = []struct {
 		name   string
-		siteID int64
+		siteID int
 		exp    interface{}
 	}{
 		{

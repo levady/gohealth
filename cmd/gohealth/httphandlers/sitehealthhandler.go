@@ -62,7 +62,7 @@ func (handler *SiteHealthHandler) Delete(w http.ResponseWriter, r *http.Request)
 	}
 
 	siteIDStr := r.URL.Path[len("/ajax/sites/delete/"):]
-	siteID, err := strconv.ParseInt(siteIDStr, 10, 64)
+	siteID, err := strconv.Atoi(siteIDStr)
 	if err != nil {
 		http.Error(w, "500 internal server error.", http.StatusInternalServerError)
 		return

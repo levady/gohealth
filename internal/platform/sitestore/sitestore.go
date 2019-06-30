@@ -19,7 +19,7 @@ const (
 
 // Site represents Site data
 type Site struct {
-	ID        int64     `json:"id"`
+	ID        int       `json:"id"`
 	URL       string    `json:"url"`
 	Status    int       `json:"status"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -27,15 +27,15 @@ type Site struct {
 
 // Store represent data store for sites
 type Store struct {
-	sites     map[int64]*Site
-	idTracker int64
+	sites     map[int]*Site
+	idTracker int
 	sync.RWMutex
 }
 
 // NewStore construct a new Store
 func NewStore() Store {
 	return Store{
-		sites:     make(map[int64]*Site),
+		sites:     make(map[int]*Site),
 		idTracker: 0,
 	}
 }
@@ -112,7 +112,7 @@ func (str *Store) Add(st Site) error {
 }
 
 // UpdateHealth update the health status of a site
-func (str *Store) UpdateHealth(siteID int64, status int) error {
+func (str *Store) UpdateHealth(siteID int, status int) error {
 	str.Lock()
 	defer str.Unlock()
 
@@ -128,7 +128,7 @@ func (str *Store) UpdateHealth(siteID int64, status int) error {
 }
 
 // Delete deletes a site from the store
-func (str *Store) Delete(siteID int64) error {
+func (str *Store) Delete(siteID int) error {
 	str.Lock()
 	defer str.Unlock()
 
