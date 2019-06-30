@@ -19,6 +19,7 @@ go run cmd/gohealth/main.go
 With env vars:
 
 ```
-# default host = localhost:8080
-HOST=:3000 go run cmd/serverd/main.go
+# default host           => localhost:8080
+# default lookbackPeriod => 0
+HOST=:3000 LOOKBACK_PERIOD=15 go run cmd/gohealth/main.go
 ```
