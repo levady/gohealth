@@ -40,15 +40,15 @@ func TestParallelHealthChecks(t *testing.T) {
 
 	sites := store.List()
 
-	if s := sites[0]; s.Healthy == true {
+	if s := sites[0]; s.Status == sitestore.Healthy {
 		t.Errorf("Expected Site1 %v to timeout.", s.URL)
 	}
 
-	if s := sites[1]; s.Healthy == true {
+	if s := sites[1]; s.Status == sitestore.Healthy {
 		t.Errorf("Expected Site2 %v to return 500.", s.URL)
 	}
 
-	if s := sites[2]; s.Healthy == false {
+	if s := sites[2]; s.Status == sitestore.Unhealthy {
 		t.Errorf("Expected Site3 %v to be healthy.", s.URL)
 	}
 }
@@ -85,19 +85,19 @@ func TestParallelHealthChecksWithLookbackPeriod(t *testing.T) {
 	sites := store.List()
 
 	s1 := sites[0]
-	if s1.HealthyIsNotNil() {
-		t.Errorf("Expected Site1 'Health' not to be updated but got %v", s1.Healthy)
+	if s1.Status != sitestore.Unknown {
+		t.Errorf("Expected Site1 'Status' not to be updated but got %v", s1.Status)
 	}
 
 	if s1.UpdatedAt != site1.UpdatedAt {
 		t.Errorf("Expected Site1 'UpdatedAt' not to be updated but got %v", s1.UpdatedAt)
 	}
 
-	if s := sites[1]; s.Healthy == true {
+	if s := sites[1]; s.Status == sitestore.Healthy {
 		t.Errorf("Expected Site2 %v to return 500.", s.URL)
 	}
 
-	if s := sites[2]; s.Healthy == false {
+	if s := sites[2]; s.Status == sitestore.Unhealthy {
 		t.Errorf("Expected Site3 %v to be healthy.", s.URL)
 	}
 }

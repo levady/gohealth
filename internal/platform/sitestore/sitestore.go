@@ -8,12 +8,21 @@ import (
 	"time"
 )
 
+const (
+	// Unknown indicate the that site status is unknown
+	Unknown = iota
+	// Healthy indicate that the site is healthy
+	Healthy
+	// Unhealthy indicate that the site is not healthy
+	Unhealthy
+)
+
 // Site represents Site data
 type Site struct {
-	ID        int64       `json:"id"`
-	URL       string      `json:"url"`
-	Healthy   interface{} `json:"healthy"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID        int64     `json:"id"`
+	URL       string    `json:"url"`
+	Status    int       `json:"status"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Store represent data store for sites
@@ -103,7 +112,7 @@ func (str *Store) Add(st Site) error {
 }
 
 // UpdateHealth update the health status of a site
-func (str *Store) UpdateHealth(siteID int64, status bool) error {
+func (str *Store) UpdateHealth(siteID int64, status int) error {
 	str.Lock()
 	defer str.Unlock()
 
@@ -113,7 +122,7 @@ func (str *Store) UpdateHealth(siteID int64, status bool) error {
 		return errors.New("Site does not exist")
 	}
 
-	s.Healthy = status
+	s.Status = status
 	s.UpdatedAt = time.Now()
 	return nil
 }
@@ -129,9 +138,4 @@ func (str *Store) Delete(siteID int64) error {
 
 	delete(str.sites, siteID)
 	return nil
-}
-
-// HealthyIsNotNil returns false if Healthy attribute is not nil
-func (s *Site) HealthyIsNotNil() bool {
-	return s.Healthy != nil
 }

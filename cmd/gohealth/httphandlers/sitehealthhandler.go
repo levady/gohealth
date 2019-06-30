@@ -42,7 +42,7 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := r.FormValue("url")
-	s := sitestore.Site{URL: strings.TrimSpace(url), Healthy: nil}
+	s := sitestore.Site{URL: strings.TrimSpace(url)}
 
 	if err := handler.SiteStore.Add(s); err != nil {
 		errData := struct{ Msg string }{err.Error()}
