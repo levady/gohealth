@@ -1,8 +1,8 @@
 package sitestore
 
 import (
-	"fmt"
 	"testing"
+	"time"
 )
 
 var (
@@ -36,13 +36,41 @@ func TestList(t *testing.T) {
 	sites := str.List()
 
 	if s := sites[0]; s.URL != "https://google.com" {
-		fmt.Printf("Site1 is %v \n", s)
 		t.Errorf("Expected the first site in the array to be google.com, but it was %v.", s.URL)
 	}
 
 	if s := sites[len(sites)-1]; s.URL != "http://stat.us/200?sleep=10000" {
-		fmt.Printf("Site1 is %v \n", s)
 		t.Errorf("Expected the first site in the array to be stat.us, but it was %v.", s.URL)
+	}
+}
+
+func TestListFilter(t *testing.T) {
+	site1.UpdatedAt = time.Now().Add(time.Duration(-12) * time.Second)
+	site2.UpdatedAt = time.Now().Add(time.Duration(-15) * time.Second)
+	site3.UpdatedAt = time.Time{}
+	site4.UpdatedAt = time.Now().Add(time.Duration(-100) * time.Second)
+	site5.UpdatedAt = time.Now()
+
+	str := NewStore()
+
+	str.Add(site1)
+	str.Add(site2)
+	str.Add(site3)
+	str.Add(site4)
+	str.Add(site5)
+
+	sites := str.ListFilter(15)
+
+	if len(sites) != 3 {
+		t.Errorf("Expected result length to 3 but it was %v", len(sites))
+	}
+
+	if s := sites[0]; s.URL != "https://golang.org/doc/articles/wiki/#tmp_7" {
+		t.Errorf("Expected the first site in the array to be golang.org, but it was %v.", s.URL)
+	}
+
+	if s := sites[len(sites)-1]; s.URL != "https://smartystreets.com/blog/2015/02/go-testing-part-1-vanillla" {
+		t.Errorf("Expected the last site in the array to be smartystreets.com, but it was %v.", s.URL)
 	}
 }
 
@@ -204,6 +232,10 @@ func TestUpdateHealth(t *testing.T) {
 			s := str.sites[tc.siteID]
 			if !tc.hasErr && s.Healthy != tc.exp {
 				t.Errorf("Expected site to be updated to %v but got %v.", tc.exp, s.Healthy)
+			}
+
+			if !tc.hasErr && s.UpdatedAt.IsZero() {
+				t.Errorf("Expected site updatedAt to be updated but got %v.", s.UpdatedAt)
 			}
 		})
 	}

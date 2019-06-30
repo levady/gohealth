@@ -5,13 +5,15 @@ import (
 	"net/url"
 	"sort"
 	"sync"
+	"time"
 )
 
 // Site represents Site data
 type Site struct {
-	ID      int64       `json:"id"`
-	URL     string      `json:"url"`
-	Healthy interface{} `json:"healthy"`
+	ID        int64       `json:"id"`
+	URL       string      `json:"url"`
+	Healthy   interface{} `json:"healthy"`
+	UpdatedAt time.Time   `json:"updated_at"`
 }
 
 // Store represent data store for sites
@@ -37,6 +39,26 @@ func (str *Store) List() []Site {
 	sites := make([]Site, 0)
 	for _, site := range str.sites {
 		sites = append(sites, *site)
+	}
+
+	sort.Slice(sites, func(i, j int) bool {
+		return sites[i].ID < sites[j].ID
+	})
+
+	return sites
+}
+
+// ListFilter returns a collection of sites filtered by their last updated at in seconds
+func (str *Store) ListFilter(lookbackPeriod int) []Site {
+	str.RLock()
+	defer str.RUnlock()
+
+	filter := time.Now().Add(time.Duration(-lookbackPeriod) * time.Second)
+	sites := make([]Site, 0)
+	for _, site := range str.sites {
+		if site.UpdatedAt.IsZero() || site.UpdatedAt.Before(filter) {
+			sites = append(sites, *site)
+		}
 	}
 
 	sort.Slice(sites, func(i, j int) bool {
@@ -92,6 +114,7 @@ func (str *Store) UpdateHealth(siteID int64, status bool) error {
 	}
 
 	s.Healthy = status
+	s.UpdatedAt = time.Now()
 	return nil
 }
 
