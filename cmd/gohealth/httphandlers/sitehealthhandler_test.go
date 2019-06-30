@@ -49,22 +49,56 @@ func TestHomepage(t *testing.T) {
 }
 
 func TestHomepage_NotFound(t *testing.T) {
-	// Request
-	req, err := http.NewRequest("POST", "/", nil)
-	if err != nil {
-		t.Fatal(err)
+	var testCases = []struct {
+		name          string
+		route         string
+		method        string
+		expStatusCode int
+	}{
+		{
+			name:          "POST request to `/`",
+			route:         "/",
+			method:        "POST",
+			expStatusCode: 404,
+		},
+		{
+			name:          "DELETE request to `/oneinamillion/twice/sumida`",
+			route:         "/oneinamillion/twice/sumida",
+			method:        "DELETE",
+			expStatusCode: 404,
+		},
+		{
+			name:          "GET request to `/blackpink/in/your/area`",
+			route:         "/blackpink/in/your/area",
+			method:        "GET",
+			expStatusCode: 404,
+		},
+		{
+			name:          "PUT request to `/spoonman`",
+			route:         "/spoonman",
+			method:        "PUT",
+			expStatusCode: 404,
+		},
 	}
 
-	// Routing
-	str := sitestore.NewStore()
-	shh := SiteHealthHandler{SiteStore: &str}
-	rr := httptest.NewRecorder()
-	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
-	resp := rr.Result()
+	for _, tc := range testCases {
+		// Request
+		req, err := http.NewRequest(tc.method, tc.route, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	// Expectations
-	if resp.StatusCode != http.StatusNotFound {
-		t.Errorf("Unexpected status code %d", resp.StatusCode)
+		// Routing
+		str := sitestore.NewStore()
+		shh := SiteHealthHandler{SiteStore: &str}
+		rr := httptest.NewRecorder()
+		http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
+		resp := rr.Result()
+
+		// Expectations
+		if tc.expStatusCode != http.StatusNotFound {
+			t.Errorf("Unexpected status code %d", resp.StatusCode)
+		}
 	}
 }
 

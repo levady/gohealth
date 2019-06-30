@@ -25,7 +25,7 @@ var homepageTplPath = "web/templates/homepage.html"
 
 // Homepage renders the home page
 func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
+	if r.Method != "GET" || r.URL.Path != "/" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
 		return
 	}
