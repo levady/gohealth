@@ -1,7 +1,6 @@
 package sitestore
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -61,10 +60,6 @@ func TestListFilter(t *testing.T) {
 	str.Add(site5)
 
 	sites := str.ListFilter(15)
-
-	for _, s := range sites {
-		fmt.Printf("======> copied site %v: %v \n", s.URL, s.updatedAt)
-	}
 
 	if len(sites) != 3 {
 		t.Errorf("Expected result length to 3 but it was %v", len(sites))
@@ -237,6 +232,10 @@ func TestUpdateHealth(t *testing.T) {
 			s := str.sites[tc.siteID]
 			if !tc.hasErr && s.Healthy != tc.exp {
 				t.Errorf("Expected site to be updated to %v but got %v.", tc.exp, s.Healthy)
+			}
+
+			if !tc.hasErr && s.UpdatedAt.IsZero() {
+				t.Errorf("Expected site updatedAt to be updated but got %v.", s.UpdatedAt)
 			}
 		})
 	}

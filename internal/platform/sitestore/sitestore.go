@@ -114,6 +114,7 @@ func (str *Store) UpdateHealth(siteID int64, status bool) error {
 	}
 
 	s.Healthy = status
+	s.UpdatedAt = time.Now()
 	return nil
 }
 
