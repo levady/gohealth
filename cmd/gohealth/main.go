@@ -14,6 +14,7 @@ import (
 
 	"github.com/levady/gohealth/cmd/gohealth/httphandlers"
 	"github.com/levady/gohealth/internal/platform/sitestore"
+	"github.com/levady/gohealth/internal/platform/sse"
 	"github.com/levady/gohealth/internal/sitehealthchecker"
 )
 
@@ -75,6 +76,9 @@ func run() error {
 	log.Printf("main : Started : Application initializing : version %q", build)
 	defer log.Println("main : Completed")
 
+	// Consruct a broker server
+	broker := sse.NewServer(log)
+
 	// Make a channel to listen for an interrupt or terminate signal from the OS.
 	// Use a buffered channel because the signal package requires it.
 	shutdown := make(chan os.Signal, 1)
@@ -82,7 +86,7 @@ func run() error {
 
 	server := http.Server{
 		Addr:    cfg.Host,
-		Handler: httphandlers.Routes(log, &str),
+		Handler: httphandlers.Routes(log, &str, broker),
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a
@@ -104,6 +108,7 @@ func run() error {
 			<-ticker.C
 			log.Printf("main : ticker : Run health checks")
 			sitehealthchecker.ParallelHealthChecks(&str, 800*time.Millisecond, cfg.LookbackPeriod)
+			broker.Notifier <- []byte("done")
 		}
 	}()
 
