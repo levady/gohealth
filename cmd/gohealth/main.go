@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"expvar"
 	"log"
@@ -21,6 +22,7 @@ import (
 type config struct {
 	Host           string
 	LookbackPeriod int
+	SSE            bool
 }
 
 // build is the git version of this program. It is set using build flags in the makefile.
@@ -46,21 +48,35 @@ func run() error {
 		host = ":8080"
 	}
 
-	lookbackPeriod := 0
+	lpCfg := 0
 	if lp := os.Getenv("LOOKBACK_PERIOD"); lp != "" {
 		var err error
-		lookbackPeriod, err = strconv.Atoi(lp)
+		lpCfg, err = strconv.Atoi(lp)
 		if err != nil {
 			return errors.New("main : Failed parsing LOOKBACK_PERIOD config")
 		}
 	}
 
-	cfg := config{
-		Host:           host,
-		LookbackPeriod: lookbackPeriod,
+	sseCfg := false
+	if sse := os.Getenv("SSE"); sse != "" {
+		var err error
+		sseCfg, err = strconv.ParseBool(sse)
+		if err != nil {
+			return errors.New("main : Failed parsing SSE config")
+		}
 	}
 
-	log.Printf("main : Config :%v", cfg)
+	cfg := config{
+		Host:           host,
+		LookbackPeriod: lpCfg,
+		SSE:            sseCfg,
+	}
+
+	prettyCfg, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		log.Printf("main: Failed marshal indent app config %v", err)
+	}
+	log.Printf("main : Config :%v", string(prettyCfg))
 
 	// =========================================================================
 	// Initializaing site memory store
@@ -86,7 +102,7 @@ func run() error {
 
 	server := http.Server{
 		Addr:    cfg.Host,
-		Handler: httphandlers.Routes(log, &str, broker),
+		Handler: httphandlers.Routes(log, &str, broker, cfg.SSE),
 	}
 
 	// Make a channel to listen for errors coming from the listener. Use a

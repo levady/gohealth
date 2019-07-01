@@ -16,16 +16,18 @@ type Middleware struct {
 }
 
 // Routes return application routes handlers
-func Routes(logger *log.Logger, str *sitestore.Store, broker *sse.Broker) http.Handler {
+func Routes(logger *log.Logger, str *sitestore.Store, broker *sse.Broker, sse bool) http.Handler {
 	router := http.DefaultServeMux
 
-	shh := SiteHealthHandler{SiteStore: str}
+	shh := SiteHealthHandler{SiteStore: str, SSE: sse}
 	router.HandleFunc("/", shh.Homepage)
 	router.HandleFunc("/sites/save", shh.Save)
 	router.HandleFunc("/ajax/sites/check", shh.HealthChecks)
 	router.HandleFunc("/ajax/sites/delete/", shh.Delete)
 
-	router.HandleFunc("/sse", broker.SSE)
+	if sse {
+		router.HandleFunc("/sse", broker.SSE)
+	}
 
 	mw := Middleware{logger: logger}
 

@@ -41,10 +41,57 @@ func TestHomepage(t *testing.T) {
 		t.Errorf("Unexpected status code %d", resp.StatusCode)
 	}
 
-	exp := string(`<li>https://google.com - </li><br />`)
-	_, e := regexp.MatchString(exp, rr.Body.String())
+	exp := string(`https://google.com`)
+	matched, e := regexp.MatchString(exp, rr.Body.String())
 	if e != nil {
-		t.Errorf("Unexpected body %v", err)
+		t.Errorf("Failed to match response body. Err: %v", e)
+	}
+
+	if !matched {
+		t.Errorf("Expected to show google.com but it was not")
+	}
+
+	exp = string(`EventSource`)
+	matched, e = regexp.MatchString(exp, rr.Body.String())
+	if e != nil {
+		t.Errorf("Failed to match response body. Err: %v", e)
+	}
+
+	if matched {
+		t.Errorf("Expected not to bind to SSE endpoint but it was not")
+	}
+}
+func TestHomepage_SSE(t *testing.T) {
+	// Mocking
+	implementedPath := homepageTplPath
+	defer func() {
+		homepageTplPath = implementedPath
+	}()
+	homepageTplPath = "../../../web/templates/homepage.html"
+
+	// Request
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Data preparation
+	str := sitestore.NewStore()
+
+	// Routing
+	rr := httptest.NewRecorder()
+	shh := SiteHealthHandler{SiteStore: &str, SSE: true}
+	http.HandlerFunc(shh.Homepage).ServeHTTP(rr, req)
+
+	// Expectations
+	exp := string(`EventSource`)
+	matched, e := regexp.MatchString(exp, rr.Body.String())
+	if e != nil {
+		t.Errorf("Failed to match response body. Err: %v", e)
+	}
+
+	if !matched {
+		t.Errorf("Expected to bind to SSE endpoint but it was not")
 	}
 }
 
@@ -123,12 +170,6 @@ func TestSave(t *testing.T) {
 	if resp.StatusCode != http.StatusFound {
 		t.Errorf("Unexpected status code %d", resp.StatusCode)
 	}
-
-	exp := string(`<li>https://zempag.com - </li><br />`)
-	_, e := regexp.MatchString(exp, rr.Body.String())
-	if e != nil {
-		t.Errorf("Unexpected body %v", rr.Body.String())
-	}
 }
 
 func TestSave_Fail(t *testing.T) {
@@ -161,8 +202,12 @@ func TestSave_Fail(t *testing.T) {
 	}
 
 	exp := string(`Site URL is not valid`)
-	_, e := regexp.MatchString(exp, rr.Body.String())
+	matched, e := regexp.MatchString(exp, rr.Body.String())
 	if e != nil {
+		t.Errorf("Failed to match response body. Err: %v", e)
+	}
+
+	if !matched {
 		t.Errorf("Unexpected body %v", rr.Body.String())
 	}
 }
@@ -186,7 +231,7 @@ func TestDelete(t *testing.T) {
 			name:            "Deleting a non existing site",
 			siteID:          "100",
 			expStatusCode:   http.StatusNotFound,
-			expResponseBody: "404 not found. \n",
+			expResponseBody: "404 page not found",
 			hasSite:         false,
 		},
 	}
@@ -216,8 +261,12 @@ func TestDelete(t *testing.T) {
 			t.Errorf("Unexpected status code: %d", resp.StatusCode)
 		}
 
-		_, e := regexp.MatchString(tc.expResponseBody, rr.Body.String())
+		matched, e := regexp.MatchString(tc.expResponseBody, rr.Body.String())
 		if e != nil {
+			t.Errorf("Failed to match response body. Err: %v", e)
+		}
+
+		if !matched {
 			t.Errorf("Unexpected body %v", rr.Body.String())
 		}
 	}
