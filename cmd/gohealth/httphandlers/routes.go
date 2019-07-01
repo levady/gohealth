@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/levady/gohealth/internal/platform/sitestore"
+	"github.com/levady/gohealth/internal/platform/sse"
 )
 
 // Middleware is the base type for all handlers
@@ -15,15 +16,18 @@ type Middleware struct {
 }
 
 // Routes return application routes handlers
-func Routes(logger *log.Logger, str *sitestore.Store) http.Handler {
+func Routes(logger *log.Logger, str *sitestore.Store, broker *sse.Broker, sse bool) http.Handler {
 	router := http.DefaultServeMux
 
-	shh := SiteHealthHandler{SiteStore: str}
-
+	shh := SiteHealthHandler{SiteStore: str, SSE: sse}
 	router.HandleFunc("/", shh.Homepage)
 	router.HandleFunc("/sites/save", shh.Save)
 	router.HandleFunc("/ajax/sites/check", shh.HealthChecks)
 	router.HandleFunc("/ajax/sites/delete/", shh.Delete)
+
+	if sse {
+		router.HandleFunc("/sse", broker.SSE)
+	}
 
 	mw := Middleware{logger: logger}
 

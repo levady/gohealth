@@ -13,7 +13,7 @@
           <div class="row mt-4">
             <div class="col-2"></div>
             <div class="col-md">
-              {{if .ErrorData }}
+              {{if ne .ErrorData.Msg "" }}
                 <div class="alert alert-danger" role="alert">
                   {{.ErrorData.Msg}}
                 </div>
@@ -31,7 +31,7 @@
                 </form>
               </div>
               <ul class="sites list-group mt-2">
-                {{range .Data}}
+                {{range .Data.Sites}}
                   <li class="list-group-item d-flex justify-content-between align-items-center">
                     <i>{{.ID}}. {{.URL}}</i>
                     <span>
@@ -94,7 +94,7 @@
       }
     }
 
-    setInterval(function(){
+    function fetchSites() {
       $.getJSON( "/ajax/sites/check", function(sites) {
         let sitesHtml = ""
         for (const site of sites) {
@@ -119,6 +119,18 @@
         $(".sites").html(sitesHtml)
         $(".delete-site").on('click', delete_site);
       });
-    }, 5000);
+    }
+    {{if .Data.SSE}}
+      if(typeof(EventSource) !== "undefined") {
+        let client = new EventSource("/sse")
+        client.onmessage = function () {
+          fetchSites()
+        }
+      } else {
+        setInterval(fetchSites, 5000)
+      }
+    {{else}}
+      setInterval(fetchSites, 5000)
+    {{end}}
   });
 </script>

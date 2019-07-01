@@ -1,6 +1,9 @@
 # Go Health
 
-Go Health checks the health of sites that are added to the app every 15 seconds.
+Go Health checks the health of sites that are added to the app every 15 seconds. There are 3 app configurations:
+- HOST: To specify the host when running the app
+- LOOKBACK_PERIOD: Only update sites data that are older than the specified lookback period
+- SSE: To activate server sent event feature
 
 # Local Setup
 
@@ -20,6 +23,7 @@ With env vars:
 
 ```
 # default host           => localhost:8080
-# default lookbackPeriod => 0
-HOST=:3000 LOOKBACK_PERIOD=15 go run cmd/gohealth/main.go
+# default lookbackPeriod => 0 # in seconds
+# default SSE            => false
+HOST=:3000 LOOKBACK_PERIOD=15 SSE=true go run cmd/gohealth/main.go
 ```

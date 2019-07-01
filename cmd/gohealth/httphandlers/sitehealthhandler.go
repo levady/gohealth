@@ -10,15 +10,27 @@ import (
 	"github.com/levady/gohealth/internal/platform/sitestore"
 )
 
-// Payload represents data to be displayed in the HTML template
+// Data represents data to be displayed in the HTML template
+type Data struct {
+	Sites []sitestore.Site
+	SSE   bool
+}
+
+// ErrorData represents error data to be displayed in the HTML template
+type ErrorData struct {
+	Msg string
+}
+
+// Payload gives data context to the HTML template
 type Payload struct {
-	Data      interface{}
-	ErrorData interface{}
+	Data      Data
+	ErrorData ErrorData
 }
 
 // SiteHealthHandler represents SiteHealthHandler data
 type SiteHealthHandler struct {
 	SiteStore *sitestore.Store
+	SSE       bool
 }
 
 var homepageTplPath = "web/templates/homepage.html"
@@ -30,7 +42,11 @@ func (handler *SiteHealthHandler) Homepage(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	p := Payload{Data: handler.SiteStore.List()}
+	data := Data{
+		Sites: handler.SiteStore.List(),
+		SSE:   handler.SSE,
+	}
+	p := Payload{Data: data}
 	renderHomepage(w, p, http.StatusOK)
 }
 
@@ -45,8 +61,12 @@ func (handler *SiteHealthHandler) Save(w http.ResponseWriter, r *http.Request) {
 	s := sitestore.Site{URL: strings.TrimSpace(url)}
 
 	if err := handler.SiteStore.Add(s); err != nil {
-		errData := struct{ Msg string }{err.Error()}
-		p := Payload{Data: handler.SiteStore.List(), ErrorData: errData}
+		errData := ErrorData{Msg: err.Error()}
+		data := Data{
+			Sites: handler.SiteStore.List(),
+			SSE:   handler.SSE,
+		}
+		p := Payload{Data: data, ErrorData: errData}
 		renderHomepage(w, p, http.StatusUnprocessableEntity)
 		return
 	}
