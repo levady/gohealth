@@ -94,7 +94,7 @@
       }
     }
 
-    setInterval(function(){
+    function fetchSites() {
       $.getJSON( "/ajax/sites/check", function(sites) {
         let sitesHtml = ""
         for (const site of sites) {
@@ -119,6 +119,15 @@
         $(".sites").html(sitesHtml)
         $(".delete-site").on('click', delete_site);
       });
-    }, 5000);
+    }
+
+    if(typeof(EventSource) !== "undefined") {
+      let client = new EventSource("/sse")
+      client.onmessage = function () {
+        fetchSites()
+      }
+    } else {
+      setInterval(fetchSites, 5000)
+    }
   });
 </script>
